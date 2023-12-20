@@ -1,0 +1,42 @@
+DROP DATABASE IF EXISTS Ospedale;
+CREATE DATABASE IF NOT EXISTS Ospedale;
+USE Ospedale;
+DROP TABLE IF EXISTS Patients;
+CREATE TABLE IF NOT EXISTS Patients(
+    ID int PRIMARY KEY AUTO_INCREMENT,
+    nome varchar(40) not null,
+    cognome varchar(40) not null,
+    sesso char(1) not null,
+    dataNascita DATE not null
+);
+
+DROP TABLE IF EXISTS Illnesses;
+CREATE TABLE IF NOT EXISTS Illnesses(
+    ID int PRIMARY KEY AUTO_INCREMENT,
+    nome varchar(40) not null,
+    descrizione varchar(255) not null
+);
+
+DROP TABLE IF EXISTS PatientsIllnesses;
+CREATE TABLE IF NOT EXISTS PatientsIllnesses(
+    ID int primary key auto_increment,
+    dataCura DATE,
+    dataCont DATE not null,
+    FK_Patient int,
+    FK_Illness int,
+    foreign key (FK_Patient) REFERENCES Patients(ID),
+    foreign key (FK_Illness) references Illnesses(ID)
+);
+
+INSERT INTO Illnesses (nome, descrizione) VALUES
+                                                       ('Vita', 'La tua nascita.'),
+                                                       ('Naso Floreale', 'Il naso sboccia come un fiore ogni primavera.'),
+                                                       ('Disarmonia Vocale da Camaleonte', 'La voce cambia colore e tonalità in base all''umore.'),
+                                                       ('L''Orecchio Multifunzionale', 'Le orecchie possono funzionare come radar per individuare il cibo preferito.'),
+                                                       ('Ipersensibilità alla Gravità', 'Chi ne soffre può saltare più in alto degli altri, ma è vulnerabile a sbalzi improvvisi.'),
+                                                       ('Capelli Bioluminescenti', 'I capelli brillano al buio come una lucciola.'),
+                                                       ('Eremitismo Istantaneo', 'Le persone possono diventare invisibili a comando, ma solo quando si sentono estremamente timide.'),
+                                                       ('Dita Multifunzionali', 'Le dita possono allungarsi e contrarsi a piacimento.'),
+                                                       ('Guance Musicali', 'Le guance producono melodie quando si soffia attraverso di esse.'),
+                                                       ('Ridolina', 'Ridere troppo può causare dolori addominali momentanei.'),
+                                                       ('Coda di Drago', 'Una piccola coda cresce nella parte bassa della schiena e può essere usata come strumento per esprimere emozioni.');
