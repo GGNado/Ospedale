@@ -40,3 +40,26 @@ INSERT INTO Illnesses (nome, descrizione) VALUES
                                                        ('Guance Musicali', 'Le guance producono melodie quando si soffia attraverso di esse.'),
                                                        ('Ridolina', 'Ridere troppo può causare dolori addominali momentanei.'),
                                                        ('Coda di Drago', 'Una piccola coda cresce nella parte bassa della schiena e può essere usata come strumento per esprimere emozioni.');
+
+INSERT INTO Patients (Nome, Cognome, Sesso, DataNascita)
+VALUES
+    ('Giulia', 'Romano', 'F', '1992-07-08'),
+    ('Marco', 'Gallo', 'M', '1988-03-25'),
+    ('Federica', 'Ricci', 'F', '1996-11-12'),
+    ('Paolo', 'Conti', 'M', '1979-09-30'),
+    ('Simona', 'Ferrari', 'F', '1982-12-18'),
+    ('Giovanni', 'Martini', 'M', '1991-06-22'),
+    ('Chiara', 'Moretti', 'F', '1975-04-07'),
+    ('Alessandro', 'Vitale', 'M', '1987-08-14'),
+    ('Valentina', 'De Luca', 'F', '1998-02-28'),
+    ('Antonio', 'Santoro', 'M', '1980-10-05'),
+    ('Elisa', 'Costa', 'F', '1993-05-19'),
+    ('Davide', 'Leone', 'M', '1989-01-26'),
+    ('Sara', 'Barbieri', 'F', '1977-07-03'),
+    ('Elena', 'Galli', 'F', '1984-09-11'),
+    ('Roberto', 'Marchetti', 'M', '1990-12-15'),
+    ('Francesca', 'Fabbri', 'F', '1986-06-29'),
+    ('Riccardo', 'Piras', 'M', '1978-03-22'),
+    ('Laura', 'Mancini', 'F', '1994-08-07'),
+    ('Massimo', 'Rizzo', 'M', '1983-11-09'),
+    ('Martina', 'Greco', 'F', '1976-01-14');
