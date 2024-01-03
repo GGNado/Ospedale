@@ -100,8 +100,8 @@ def home(req: Request):
 		}
 	)
 
-@webapp.get("/api")
-def pazientiPage(req: Request):
+@webapp.get("/api/patient")
+async def pazientiPage(req: Request):
 	return templates.TemplateResponse(
 		"pazienti.html", {
 			"request": req,
@@ -109,11 +109,41 @@ def pazientiPage(req: Request):
 		}
 	)
 
+@webapp.delete("/api/patient/{id}")
+async def eliminaPaziente(id):
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		# Esempio di esecuzione di una query
+		query = f"DELETE FROM Patients WHERE id = {id}"
+		cur = conn.cursor()
+		cur.execute(query)
+		conn.commit()
+		conn.close()
+
+@webapp.get("/api/patient/add")
+async def cambiaPag(req: Request):
+	return templates.TemplateResponse(
+		"aggiungiPaziente.html", {
+			"request": req,
+		}
+	)
+
+@webapp.post("/api/patient/add")
+async def aggiungiPaziente(req: Request, p: Pazienti):
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		# Esempio di esecuzione di una query
+		query = "INSERT INTO Patients (Nome, Cognome, Sesso, DataNascita) VALUES (%s, %s, %s, %s)"
+		cur = conn.cursor()
+		cur.execute(query, (p.nome, p.cognome, p.sesso, p.dataNascita))
+		conn.commit()
+		conn.close()
+
 # Avvio dell'applicazione utilizzando uvicorn
 if __name__ == '__main__':
 	uvicorn.run(
 		'main:webapp',
-		host='192.168.1.33',
+		host='0.0.0.0',
 		port=3109,
 		# use_colors = False,
 		http='httptools',
