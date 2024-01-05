@@ -1,4 +1,3 @@
-```markdown
 # Benvenuto a 🏥 Fanta Ospedale!
 
 **Crea un archivio di pazienti con malattie immaginarie!** Questo progetto, battezzato affettuosamente come Fanta Ospedale, ti invita a esplorare un mondo immaginario dove le malattie sono tanto uniche quanto stravaganti. 
@@ -14,7 +13,6 @@ L'obiettivo di questo progetto è quello di creare un robusto pannello amministr
 -- Iniziamo definendo la struttura del nostro database Ospedale con SQL.
 
 ... (Definizioni delle tabelle, inserimento di dati di esempio)
-```
 
 ### Codice Python (FastAPI)
 ```python
