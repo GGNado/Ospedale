@@ -1,8 +1,11 @@
+from typing import List
+
 import uvicorn
 import mysql.connector
 import random
 import os
 import jinja2
+import aiofiles
 from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
@@ -11,11 +14,11 @@ from pydantic import BaseModel
 from datetime import datetime
 
 config = {
-    'user': 'root',
-    'password': '',
-    'host': 'localhost',
+	'user': 'root',
+	'password': '',
+	'host': 'localhost',
 	'port': 3306,
-    'database': 'Ospedale'
+	'database': 'Ospedale'
 }
 
 # Creazione dell'app FastAPI
@@ -52,46 +55,80 @@ class Pazienti(BaseModel):
 			differenza_anni -= 1
 		return differenza_anni
 
-# Lista di esempio di persone esempio
-"""
-listaPazienti = [
-    Pazienti(id=1, nome="Mario", cognome="Rossi", eta=35, sesso="M", dataNascita=datetime(1988, 5, 15), dataRicovero=datetime.now()),
-    Pazienti(id=2, nome="Maria", cognome="Bianchi", eta=28, sesso="F", dataNascita=datetime(1995, 10, 22), dataRicovero=datetime.now()),
-    Pazienti(id=3, nome="Giovanni", cognome="Verdi", eta=45, sesso="M", dataNascita=datetime(1978, 3, 7), dataRicovero=datetime.now()),
-    Pazienti(id=4, nome="Luigi", cognome="Gialli", eta=60, sesso="M", dataNascita=datetime(1963, 12, 18), dataRicovero=datetime.now()),
-    Pazienti(id=5, nome="Chiara", cognome="Neri", eta=20, sesso="F", dataNascita=datetime(2002, 8, 30), dataRicovero=datetime.now()),
-    Pazienti(id=6, nome="Paolo", cognome="Rosa", eta=55, sesso="M", dataNascita=datetime(1968, 6, 5), dataRicovero=datetime.now()),
-    Pazienti(id=7, nome="Alessia", cognome="Verdi", eta=32, sesso="F", dataNascita=datetime(1990, 4, 12), dataRicovero=datetime.now()),
-    Pazienti(id=8, nome="Marco", cognome="Marroni", eta=42, sesso="M", dataNascita=datetime(1981, 9, 25), dataRicovero=datetime.now()),
-    Pazienti(id=9, nome="Elena", cognome="Blu", eta=25, sesso="F", dataNascita=datetime(1998, 7, 17), dataRicovero=datetime.now()),
-    Pazienti(id=10, nome="Federico", cognome="Arancioni", eta=38, sesso="M", dataNascita=datetime(1985, 11, 9), dataRicovero=datetime.now()),
-    # Aggiungi altri pazienti con le loro informazioni di data di nascita e di ricovero
-]
-"""
+class Malattie(BaseModel):
+	id: int
+	nome: str
+	descrizione: str
+
+class MalattieLista(BaseModel):
+	malattieIds: List[int]
 
 # QUI INSERITE LE FUNZIONI
 def getAllPazienti():
 	conn = mysql.connector.connect(**config)
 	if conn.is_connected():
-		print('Okay')
-		# Creazione di un cursore per eseguire le query
 		cursor = conn.cursor()
-		# Esempio di esecuzione di una query
 		query = "SELECT * FROM Patients"
 		cursor.execute(query)
-		# Ottenere i risultati della query
 		results = cursor.fetchall()
-		# Crezione Lista
 		listaPazienti = []
 		for row in results:
 			listaPazienti.append(Pazienti(id=int(row[0]), nome=row[1], cognome=row[2], sesso=row[3], dataNascita=row[4]))
-		# Chiudi il cursore e la connessione
 		cursor.close()
 		conn.close()
 		return listaPazienti
 	else:
 		print('Connessione al database fallita.')
-		#Rimanda a qualcge pagina
+
+def getPazienteById(id):
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		cursor = conn.cursor()
+		query = "SELECT * FROM Patients WHERE id = %s"
+		cursor.execute(query, (id,))
+		results = cursor.fetchall()
+		p = None
+		for row in results:
+			p = Pazienti(id=int(row[0]), nome=row[1], cognome=row[2], sesso=row[3], dataNascita=row[4])
+		cursor.close()
+		conn.close()
+		return p
+	else:
+		print('Connessione al database fallita.')
+
+def getAllMalattie():
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		cursor = conn.cursor()
+		query = "SELECT * FROM Illnesses"
+		cursor.execute(query)
+		results = cursor.fetchall()
+		listaMalattie = []
+		for row in results:
+			listaMalattie.append(Malattie(id=int(row[0]), nome=row[1], descrizione=row[2]))
+		cursor.close()
+		conn.close()
+		return listaMalattie
+	else:
+		print('Connessione al database fallita.')
+
+def getPazienteMalattie(idPaziente: int):
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		cursor = conn.cursor()
+		query = "SELECT FK_Malattia FROM PatientsIllnesses WHERE FK_Paziente = %s AND dataCura IS NULL"
+		cursor.execute(query, (idPaziente,))
+		results = cursor.fetchall()
+		listaMalattie = []
+		for row in results:
+			listaMalattie.append(row[0])
+		cursor.close()
+		conn.close()
+		return listaMalattie
+	else:
+		print('Connessione al database fallita.')
+
+
 @webapp.get("/", response_class= HTMLResponse)
 def home(req: Request):
 	return templates.TemplateResponse(
@@ -127,7 +164,6 @@ async def cambiaPag(req: Request):
 			"request": req,
 		}
 	)
-
 @webapp.post("/api/patient/add")
 async def aggiungiPaziente(req: Request, p: Pazienti):
 	conn = mysql.connector.connect(**config)
@@ -138,6 +174,118 @@ async def aggiungiPaziente(req: Request, p: Pazienti):
 		cur.execute(query, (p.nome, p.cognome, p.sesso, p.dataNascita))
 		conn.commit()
 		conn.close()
+
+@webapp.post('/api/patient/uploadImage/{nome}/{cognome}/{data}')
+async def uploadImg(data:datetime, nome: str, cognome: str, imgFile: UploadFile = File(...)):
+	filename = f'{nome}_{cognome}_{data.strftime("%Y-%m-%d")}.jpg'
+
+	async with aiofiles.open(os.path.join("static", filename), "wb") as out_file:
+		content = await imgFile.read()  # Leggi il contenuto del file caricato
+		await out_file.write(content)   # Scrivi il contenuto nel nuovo file
+
+@webapp.put("/api/patient/{id}/")
+async def aggiornaPaziente(p: Pazienti):
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		query = '''UPDATE Patients
+				   SET Nome = %s, Cognome = %s, Sesso = %s, DataNascita = %s
+				   WHERE id = %s'''
+		cur = conn.cursor()
+		cur.execute(query, (p.nome, p.cognome, p.sesso, p.dataNascita, p.id))
+		conn.commit()
+		conn.close()
+
+@webapp.get("/api/patient/{id}")
+async def cambiaPag(req: Request, id: int):
+	return templates.TemplateResponse(
+		"aggiornaPaziente.html", {
+			"request": req,
+			"pazienteCorrente": getPazienteById(id)
+		}
+	)
+
+@webapp.get("/api/patient/{id}/aggiungiIlness")
+async def cambiaPag(req: Request, id: int):
+	return templates.TemplateResponse(
+		"malattieAggiungi.html", {
+			"request": req,
+			"listaMalattie": getAllMalattie(),
+			"pMalattie": getPazienteMalattie(id),
+			"paziente": getPazienteById(id)
+		}
+	)
+
+@webapp.get("/api/patient/{id}/ilness")
+async def cambiaPag(req: Request, id: int):
+	return templates.TemplateResponse(
+		"malattieIndex.html", {
+			"request": req,
+			"paziente": getPazienteById(id)
+		}
+	)
+
+@webapp.post("/api/patient/{id}/aggiungiIlness/")
+async def aggiungiMalattie(id: int, malattie_ids: MalattieLista):
+	malattie_selezionate = malattie_ids.malattieIds
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		for ids in malattie_selezionate:
+			query = '''INSERT INTO PatientsIllnesses (dataCont, FK_Paziente, FK_Malattia) VALUES (%s, %s, %s)'''
+			cur = conn.cursor()
+			cur.execute(query, (datetime.now(), id, ids))
+			conn.commit()
+
+		conn.close()
+
+@webapp.get("/api/patient/{id}/eliminaIlness")
+async def cambiaPag(req: Request, id: int):
+	return templates.TemplateResponse(
+		"eliminaMalattie.html", {
+			"request": req,
+			"listaMalattie": getAllMalattie(),
+			"pMalattie": getPazienteMalattie(id),
+			"paziente": getPazienteById(id)
+		}
+	)
+@webapp.delete("/api/patient/{id}/eliminaIlness/")
+async def eliminaMalattie(id: int, malattie_ids: MalattieLista):
+	malattie_selezionate = malattie_ids.malattieIds
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		for ids in malattie_selezionate:
+			query = '''DELETE FROM PatientsIllnesses WHERE FK_Paziente = %s AND FK_Malattia = %s'''
+			cur = conn.cursor()
+			cur.execute(query, (id, ids))
+			conn.commit()
+
+		conn.close()
+
+@webapp.get("/api/patient/{id}/modificaIlness")
+async def cambiaPag(req: Request, id: int):
+	return templates.TemplateResponse(
+		"modificaMalattie.html", {
+			"request": req,
+			"listaMalattie": getAllMalattie(),
+			"pMalattie": getPazienteMalattie(id),
+			"paziente": getPazienteById(id)
+		}
+	)
+
+@webapp.put("/api/patient/{id}/modificaIlness")
+async def modificaMalattie(id: int, malattie_ids: MalattieLista):
+	malattie_selezionate = malattie_ids.malattieIds
+	conn = mysql.connector.connect(**config)
+	if conn.is_connected():
+		for ids in malattie_selezionate:
+			query = '''UPDATE PatientsIllnesses
+							   SET dataCura = %s
+							   WHERE FK_Malattia = %s AND FK_Paziente = %s'''
+			cur = conn.cursor()
+			cur.execute(query, (datetime.now(), ids, id))
+			conn.commit()
+
+		conn.close()
+
 
 # Avvio dell'applicazione utilizzando uvicorn
 if __name__ == '__main__':

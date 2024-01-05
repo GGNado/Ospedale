@@ -8,14 +8,14 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
       <style>
         footer {
-            background-color: #333;
-            color: #fff;
-            text-align: center;
-            padding: 10px;
-            position: relative;
-            bottom: 0;
-            width: 100%;
-        }
+        position: fixed;
+        bottom: 0;
+        width: 100%;
+        background-color: #333;
+        color: #fff;
+        text-align: center;
+        padding: 10px;
+    }
     </style>
   </head>
 <body>
@@ -54,13 +54,43 @@
         });
 }
 
-    async function malattie(patientId) {
+    async function aggiungiMalattie(patientId) {
     // Effettua una richiesta GET all'API con l'ID del paziente
-    fetch(`/api/patient/${patientId}/ilness`)
+    fetch(`/api/patient/${patientId}/aggiungiIlness`)
         .then(response => {
             if (response.ok) {
                 // Esegui il reindirizzamento alla pagina desiderata
-                window.location.href = `/api/patient/${patientId}/ilness`;
+                window.location.href = `/api/patient/${patientId}/aggiungiIlness`;
+            } else {
+                console.error('Errore nella richiesta GET per il paziente con ID:', patientId);
+            }
+        })
+        .catch(error => {
+            console.error('Errore nella richiesta GET:', error);
+        });
+}
+
+    async function eliminaMalattie(patientId) {
+    fetch(`/api/patient/${patientId}/eliminaIlness`)
+        .then(response => {
+            if (response.ok) {
+                // Esegui il reindirizzamento alla pagina desiderata
+                window.location.href = `/api/patient/${patientId}/eliminaIlness`;
+            } else {
+                console.error('Errore nella richiesta GET per il paziente con ID:', patientId);
+            }
+        })
+        .catch(error => {
+            console.error('Errore nella richiesta GET:', error);
+        });
+}
+
+    async function modificaMalattie(patientId) {
+    fetch(`/api/patient/${patientId}/modificaIlness`)
+        .then(response => {
+            if (response.ok) {
+                // Esegui il reindirizzamento alla pagina desiderata
+                window.location.href = `/api/patient/${patientId}/modificaIlness`;
             } else {
                 console.error('Errore nella richiesta GET per il paziente con ID:', patientId);
             }
@@ -82,7 +112,7 @@
           <a class="nav-link active" aria-current="page" href="/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/api">Pazienti registrati {{ listaPazienti|length }}</a>
+          <a class="nav-link" href="/api">Scrivi qualcosa pls</a>
         </li>
       </ul>
       <form class="d-flex" role="search">
@@ -95,52 +125,37 @@
 
 <section class="container mt-4">
     <div class="row">
-        <div class="col-md-4 mb-4">
+        <div class="col">
             <div class="card d-flex flex-column h-100">
-                <div class="card-header">
-                    Aggiungi Paziente
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <span>Scheda Paziente</span>
+                    <div>
+                        <button class="btn btn-danger btn-sm" onclick="eliminaMalattie({{ paziente.id }})">Elimina Malattie</button>
+                        <button class="btn btn-primary btn-sm" onclick="modificaMalattie({{ paziente.id }})">Modifica Malattie</button>
+                        <button class="btn btn-success btn-sm" onclick="aggiungiMalattie({{ paziente.id }})">Aggiungi Malattie</button>
+                    </div>
                 </div>
-                <div class="card-body d-flex align-items-center justify-content-center">
-                    <a href="/api/patient/add">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="50" height="50" fill="currentColor" class="bi bi-plus" viewBox="0 0 16 16">
-                            <path d="M7 0h2v16H7V0zM0 7v2h16V7H0z"/>
-                        </svg>
-                    </a>
+                <div class="card-body d-flex">
+                    <div class="d-flex align-items-center">
+                        <img src="../../../static/{{paziente.nome}}_{{paziente.cognome}}_{{paziente.dataNascita.strftime('%Y-%m-%d')}}.jpg" onerror="this.onerror=null; this.src='../../../static/icon.png';" alt="Immagine di profilo" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                        <div>
+                            <h5 class="card-title">{{paziente.nome}} {{paziente.cognome}}</h5>
+                            <p class="card-text">Età: {{paziente.calcolaEta()}}</p>
+                            <p class="card-text">Codice Paziente: {{paziente.id}}</p>
+                            <p class="card-text">Malattie: Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+                            <p class="card-text">Condizioni: Stabili</p>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        {% for paziente in listaPazienti %}
-        <div class="col-md-4 mb-4">
-    <div class="card d-flex flex-column h-100">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <span>Scheda Paziente</span>
-            <div>
-                <button class="btn btn-danger btn-sm" onclick="eliminaPaziente({{ paziente.id }})">Elimina</button>
-                <button class="btn btn-primary btn-sm" onclick="modifica({{ paziente.id }})">Modifica</button>
-                <button class="btn btn-success btn-sm" onclick="malattie({{ paziente.id }})">Malattie</button>
-            </div>
-        </div>
-        <div class="card-body d-flex">
-            <div class="d-flex align-items-center">
-                <!-- Aggiunta dell'immagine di profilo -->
-                <img src="../static/{{paziente.nome}}_{{paziente.cognome}}_{{paziente.dataNascita.strftime('%Y-%m-%d')}}.jpg" onerror="this.onerror=null; this.src='../static/icon.png';" alt="Immagine di profilo" class="rounded-circle me-3" style="width: 50px; height: 50px;">
-                <div>
-                    <h5 class="card-title">{{paziente.nome}} {{paziente.cognome}}</h5>
-                    <p class="card-text">Età: {{paziente.calcolaEta()}}</p>
-                    <p class="card-text">Codice Paziente: {{paziente.id}}</p>
-                    <p class="card-text">Malattie: Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                    <p class="card-text">Condizioni: Stabili</p>
+                <div class="card-footer text-muted mt-auto">
+                    Data di qualcosa: XX/XX/XX
                 </div>
             </div>
         </div>
-        <div class="card-footer text-muted mt-auto">
-            Data di qualcosa: XX/XX/XX
-        </div>
-    </div>
-</div>
-        {% endfor %}
     </div>
 </section>
+
+
 
 
     <footer>

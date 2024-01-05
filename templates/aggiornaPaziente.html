@@ -66,26 +66,30 @@
                 <div class="card-body">
                     <form id="patientForm" method="post" enctype="multipart/form-data">
                         <div class="mb-3">
+                            <label class="form-label">ID</label>
+                            <input type="text" class="form-control" id="id" name="id" value="{{pazienteCorrente.id}}" readonly>
+                        </div>
+                        <div class="mb-3">
                             <label for="nome" class="form-label">Nome</label>
-                            <input type="text" class="form-control" id="nome" name="nome" required>
+                            <input type="text" class="form-control" id="nome" name="nome" value="{{pazienteCorrente.nome}}" required>
                         </div>
                         <div class="mb-3">
                             <label for="cognome" class="form-label">Cognome</label>
-                            <input type="text" class="form-control" id="cognome" name="cognome" required>
+                            <input type="text" class="form-control" id="cognome" name="cognome" value="{{pazienteCorrente.cognome}}" required>
                         </div>
                         <div class="mb-3">
                             <label for="sesso" class="form-label">Sesso (M/F)</label>
-                            <input type="text" class="form-control" id="sesso" name="sesso" required>
+                            <input type="text" class="form-control" id="sesso" name="sesso" value="{{pazienteCorrente.sesso}}" required>
                         </div>
                         <div class="mb-3">
                             <label for="dataNascita" class="form-label">Data di Nascita</label>
-                            <input type="date" class="form-control" id="dataNascita" name="dataNascita" required>
+                            <input type="date" class="form-control" id="dataNascita" name="dataNascita" value="{{pazienteCorrente.dataNascita.strftime('%Y-%m-%d')}}" required>
                         </div>
                         <div class="mb-3">
                             <label for="immagineProfilo" class="form-label">Immagine Profilo</label>
                             <input type="file" class="form-control" id="immagineProfilo" name="immagineProfilo" accept="image/*">
                         </div>
-                        <button type="submit" class="btn btn-primary">Aggiungi</button>
+                        <button type="submit" class="btn btn-primary">Modifica</button>
                     </form>
                 </div>
             </div>
@@ -101,6 +105,7 @@
         document.getElementById('patientForm').addEventListener('submit', async function(event) {
     event.preventDefault();
 
+    const id = Number(document.getElementById('id').value);
     const nome = document.getElementById('nome').value;
     const cognome = document.getElementById('cognome').value;
     const sesso = document.getElementById('sesso').value;
@@ -113,7 +118,7 @@
     const dataNascitaISO = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T00:00:00.000Z`;
 
     const formData = {
-        id: 0,
+        id: id,
         nome: nome,
         cognome: cognome,
         sesso: sesso,
@@ -121,8 +126,8 @@
     };
 
     try {
-        const response = await fetch('/api/patient/add', {
-            method: 'POST',
+        const response = await fetch(`/api/patient/${id}/`, {
+            method: 'PUT',
             headers: {
                 'Content-Type': 'application/json'
             },
@@ -131,29 +136,8 @@
 
         if (response.ok) {
             console.log('Dati inviati con successo!');
-            alert('Paziente aggiunto correttamente');
-
-            const imgFile = document.getElementById('immagineProfilo').files[0]; // Elemento input file per l'immagine
-            if (imgFile) {
-                const imgFormData = new FormData();
-                imgFormData.append('imgFile', imgFile); // Aggiungi l'immagine al FormData
-
-                const imgResponse = await fetch(`/api/patient/uploadImage/${nome}/${cognome}/${dataNascitaISO}`, {
-                    method: 'POST',
-                    body: imgFormData
-                });
-
-                if (imgResponse.ok) {
-                    console.log('Immagine inviata con successo!');
-                    alert('Immagine aggiunta correttamente');
-                    window.location.href = '/api/patient';
-                } else {
-                    console.error('Si è verificato un errore durante l\'invio dell\'immagine.');
-                }
-            } else {
-                console.error('Nessuna immagine selezionata.');
-                window.location.href = '/api/patient';
-            }
+            alert('Paziente aggiornato correttamente');
+            window.location.href = '/api/patient';
         } else {
             console.error('Si è verificato un errore durante l\'invio dei dati.');
         }
