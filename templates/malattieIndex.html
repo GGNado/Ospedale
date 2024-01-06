@@ -112,13 +112,9 @@
           <a class="nav-link active" aria-current="page" href="/">Home</a>
         </li>
         <li class="nav-item">
-          <a class="nav-link" href="/api">Scrivi qualcosa pls</a>
+          <a class="nav-link" href="/api/patient">Lista Pazienti</a>
         </li>
       </ul>
-      <form class="d-flex" role="search">
-        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search">
-        <button class="btn btn-outline-success" type="submit">Search</button>
-      </form>
     </div>
   </div>
 </nav>
@@ -136,19 +132,24 @@
                     </div>
                 </div>
                 <div class="card-body d-flex">
-                    <div class="d-flex align-items-center">
-                        <img src="../../../static/{{paziente.nome}}_{{paziente.cognome}}_{{paziente.dataNascita.strftime('%Y-%m-%d')}}.jpg" onerror="this.onerror=null; this.src='../../../static/icon.png';" alt="Immagine di profilo" class="rounded-circle me-3" style="width: 50px; height: 50px;">
-                        <div>
-                            <h5 class="card-title">{{paziente.nome}} {{paziente.cognome}}</h5>
-                            <p class="card-text">Età: {{paziente.calcolaEta()}}</p>
-                            <p class="card-text">Codice Paziente: {{paziente.id}}</p>
-                            <p class="card-text">Malattie: Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
-                            <p class="card-text">Condizioni: Stabili</p>
-                        </div>
-                    </div>
+            <div class="d-flex align-items-center">
+                <!-- Aggiunta dell'immagine di profilo -->
+                <img src="../../../static/{{paziente.nome}}_{{paziente.cognome}}_{{paziente.dataNascita.strftime('%Y-%m-%d')}}.jpg" onerror="this.onerror=null; this.src='../../../static/icon.png';" alt="Immagine di profilo" class="rounded-circle me-3" style="width: 50px; height: 50px;">
+                <div>
+                    <h5 class="card-title">{{paziente.nome}} {{paziente.cognome}}</h5>
+                    <p class="card-text">Età: {{paziente.calcolaEta()}}</p>
+                    <p class="card-text">Codice Paziente: {{paziente.id}}</p>
+                    {% if paziente.sesso == "F": %}
+                        <p class="card-text">Sesso: Donna</p>
+                    {% else: %}
+                        <p class="card-text">Sesso: Uomo</p>
+                    {% endif %}
+                    <p class="card-text">Condizioni: {{paziente.getCondizioni()}}</p>
                 </div>
+            </div>
+        </div>
                 <div class="card-footer text-muted mt-auto">
-                    Data di qualcosa: XX/XX/XX
+                    Data di nascita: {{ paziente.dataNascita.strftime('%Y-%m-%d')}}
                 </div>
             </div>
         </div>

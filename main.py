@@ -41,7 +41,7 @@ webapp.mount(
 	name='static'
 )
 
-# Definizione dell'oggetto Person utilizzando pydantic (altrimenti dovevamo usare dataclasses)
+# Definizione dell'oggetto Pazienti utilizzando pydantic
 class Pazienti(BaseModel):
 	id: int
 	nome: str
@@ -55,6 +55,17 @@ class Pazienti(BaseModel):
 			differenza_anni -= 1
 		return differenza_anni
 
+	def getCondizioni(self) -> str:
+		listaMalattie = getPazienteMalattie(self.id)
+		if len(listaMalattie) < 2:
+			return "Eccellenti"
+		elif len(listaMalattie) < 6:
+			return "Stabili"
+		else:
+			return "Gravi"
+
+
+
 class Malattie(BaseModel):
 	id: int
 	nome: str
@@ -64,12 +75,16 @@ class MalattieLista(BaseModel):
 	malattieIds: List[int]
 
 # QUI INSERITE LE FUNZIONI
-def getAllPazienti():
+def getAllPazienti(filtro = None):
 	conn = mysql.connector.connect(**config)
 	if conn.is_connected():
 		cursor = conn.cursor()
-		query = "SELECT * FROM Patients"
-		cursor.execute(query)
+		if filtro == None:
+			query = "SELECT * FROM Patients"
+			cursor.execute(query)
+		else:
+			query = "SELECT * FROM Patients WHERE nome LIKE %s OR cognome LIKE %s"
+			cursor.execute(query, (filtro, filtro))
 		results = cursor.fetchall()
 		listaPazienti = []
 		for row in results:
@@ -146,14 +161,26 @@ async def pazientiPage(req: Request):
 		}
 	)
 
+@webapp.get("/api/patientFiltro/{f}")
+async def pazientiPage(req: Request, f: str):
+	return templates.TemplateResponse(
+		"pazienti.html", {
+			"request": req,
+			"listaPazienti": getAllPazienti(f)
+		}
+	)
+
+
 @webapp.delete("/api/patient/{id}")
 async def eliminaPaziente(id):
 	conn = mysql.connector.connect(**config)
 	if conn.is_connected():
-		# Esempio di esecuzione di una query
-		query = f"DELETE FROM Patients WHERE id = {id}"
+		queryForein = "DELETE FROM PatientsIllnesses WHERE FK_Paziente = %s"
+		query = "DELETE FROM Patients WHERE id = %s"
 		cur = conn.cursor()
-		cur.execute(query)
+		cur.execute(queryForein, (id,))
+		conn.commit()
+		cur.execute(query, (id,))
 		conn.commit()
 		conn.close()
 
@@ -165,10 +192,9 @@ async def cambiaPag(req: Request):
 		}
 	)
 @webapp.post("/api/patient/add")
-async def aggiungiPaziente(req: Request, p: Pazienti):
+async def aggiungiPaziente(p: Pazienti):
 	conn = mysql.connector.connect(**config)
 	if conn.is_connected():
-		# Esempio di esecuzione di una query
 		query = "INSERT INTO Patients (Nome, Cognome, Sesso, DataNascita) VALUES (%s, %s, %s, %s)"
 		cur = conn.cursor()
 		cur.execute(query, (p.nome, p.cognome, p.sesso, p.dataNascita))
