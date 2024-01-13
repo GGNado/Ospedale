@@ -5,6 +5,7 @@ import mysql.connector
 import random
 import os
 import jinja2
+import json
 import aiofiles
 from fastapi import FastAPI, Request, UploadFile, File
 from fastapi.responses import HTMLResponse
@@ -169,8 +170,6 @@ async def pazientiPage(req: Request, f: str):
 			"listaPazienti": getAllPazienti(f)
 		}
 	)
-
-
 @webapp.delete("/api/patient/{id}")
 async def eliminaPaziente(id):
 	conn = mysql.connector.connect(**config)
